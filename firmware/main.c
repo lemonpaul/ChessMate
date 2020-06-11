@@ -18,7 +18,7 @@
 /******************************************************************************/
 
 #ifndef F_CPU 
-#define F_CPU 25000000
+#define F_CPU 8000000
 #endif
 
 /* required headers */
@@ -85,17 +85,17 @@ void Initialize_Hardware()
 #define CLR_EVENT   5
 #define ENTER_EVENT 4
 #define KEY18_EVENT 3
-#define treshold_long_press 228 // ~600ms
-#define treshold_short_press 28
+#define treshold_long_press 100 // ~600ms
+#define treshold_short_press 6
 
 #define _MOVE_PIN 3
 #define _CONTROL_PIN 2
 
-#define MOVE ((PIND & (1<<_MOVE_PIN))==0)
-#define CONTROL ((PIND & (1<<_CONTROL_PIN))==0)
+#define MOVE ((PIND & (1<<_MOVE_PIN)) == 0)
+#define CONTROL ((PIND & (1<<_CONTROL_PIN)) == 0)
 
-    void Clear_Display()
-    {
+void Clear_Display()
+{
     Display[0]= _SPC; // Clear display
     Display[1]= _SPC;
     Display[2]= _SPC;
@@ -106,7 +106,7 @@ void Initialize_Hardware()
     c[2]=32;
     c[3]=32;
     c[4]=10;
-    }
+}
 
 void Refresh_display()
 {
@@ -118,22 +118,22 @@ void Refresh_display()
     static uint8_t key_clr_ticks = 0;
     static uint8_t key_ent_ticks = 0;
 
-    uint8_t digit_now = (TCNT2 >>6 ) & 0x03; // switch each digit ~10,5ms
+    uint8_t digit_now = (TCNT2>>6) & 0x03;             // switch each digit ~10,5ms
 
     /* check if it's time to change the segment and scan the keyboard */
 
     if (digit_now != last_digit)                       // will occur once at each 2,6 ms
-    { 
+    {
         last_digit = digit_now;
 
         /* change pins to read keyboard */
 
-        PORTB = 0x0f;                                  // All segments off
-        PORTD |=0xfc;                                  // Pins B, G in high, pullups on pins
-        PORTC |=0x3f;                                  // pins D, F, Dp, A, E, D in high
+        PORTB = 0x0f;                                  // All segments off                   00001111
+        PORTD |= 0xfc;                                 // Pins B, G in high, pullups on pins 111111xx
+        PORTC |= 0x3f;                                 // pins D, F, Dp, A, E, D in high     xx111111
 
         /* Process CLR/NEW KEY */
-        PORTD &= ~(1<<7);                              // Drop line and wait for settle down
+        PORTD &= ~(1<<7);                              // Drop line and wait for settle down 0xxxxxxx
         asm("nop");
         asm("nop");
         asm("nop");
@@ -151,19 +151,20 @@ void Refresh_display()
         else                                           // button CLR is released
         {
             temp = key_clr_ticks;
-            key_clr_ticks=0;
+            key_clr_ticks = 0;
+
             KeyStatus &= ~(1<<CLR_EVENT | 1<<CLR_LONG); // by default no event 
                                                         // if press under treshold
             if (temp > treshold_long_press)
             {
-                KeyStatus|=(1<<CLR_EVENT | 1<<CLR_LONG);
+                KeyStatus |= (1<<CLR_EVENT | 1<<CLR_LONG);
             }
             if (temp > treshold_short_press)
             {
-                KeyStatus|=(1<<CLR_EVENT);
+                KeyStatus |= (1<<CLR_EVENT);
             }
         }
-        PORTD |= (1<<7);                                // Raise line pin again
+        PORTD |= (1<<7);                                // Raise line pin again              1xxxxxxx
 
         /* Process ENTER Key */
         PORTD &= ~(1<<6);                               // Drop line and wait for settle down
@@ -181,10 +182,10 @@ void Refresh_display()
             }
             KeyStatus &= ~(1<<ENTER_EVENT);             // ENTER not pressed;
         }
-        else                                            // button ENTER is released
+        else                                             // button ENTER is released
         {
-            temp=key_ent_ticks;
-            key_ent_ticks=0;
+            temp = key_ent_ticks;
+            key_ent_ticks = 0;
             KeyStatus &= ~(1<<ENTER_EVENT);             // by default no event if press under 
                                                         // treshold
             if (temp > treshold_short_press)
@@ -243,14 +244,15 @@ void Refresh_display()
             {
                 key18_ticks++;
             }
-            last_key=Keys18;                            // save button pressed
+            last_key = Keys18;                          // save button pressed
 
             KeyStatus &= ~(1<<KEY18_EVENT);             // No key 1-8 not pressed;
         }
         else                                            // button ENTER is released
         {
-            temp=key18_ticks;
-            key18_ticks=0;
+
+            temp = key18_ticks;
+            key18_ticks = 0;
             KeyStatus &= ~(1<<KEY18_EVENT);             // by default no event if press under
                                                         // treshold
             if (temp > treshold_short_press)
@@ -270,6 +272,7 @@ void Refresh_display()
                          break;
                      case 0b10000000:                   // Key 4
                          KeyStatus |= 3;
+                         printf("Key 4 Pressed\n");
                          break;
                      case 0b00100000:                   // Key 5
                          KeyStatus |= 4;
@@ -294,12 +297,12 @@ void Refresh_display()
                 }
                 else
                 {
-                    (KeyStatus &= ~(1<<NEW_EVENT));
+                    KeyStatus &= ~(1<<NEW_EVENT);
                 }
             }
             else
             {
-                last_key=0;
+                last_key = 0;
             }
         }
 
@@ -336,8 +339,8 @@ uint8_t printBoard()
         printf("%c", NN&8&&(NN+=7)?10:".?+nkbrq?*?NKBRQ" [b[NN]&15]); // print board
     }
 
-    printf_P(PSTR("\nCHECKMATE	Legal?	Last	Depth	Score	(Wht=16)\n"));
-    printf("%d     %d       %d      %d  %d\n", CHECKMATE, LegalMove, Depth, SCORE, k);
+    printf_P(PSTR("\nCHECKMATE\tLegal?\tLast\tDepth\tScore\t(Wht=16)\n"));
+    printf("%d\t%d\t%d\t%d \t%d\n", CHECKMATE, LegalMove, Depth, SCORE, k);
     return 0;
 }
 
@@ -407,10 +410,10 @@ int main( void)
     USART0Init();
     stdout = &usart0_str;
     stdin  = &usart0_str;
-    printf_P(PSTR("\nLets Play"));
+    printf("Lets Play!\n");
 
     /* Start the show! */
-    for (;;)
+    while (true)
     {
         switch (LilyState)
         {
@@ -445,7 +448,7 @@ int main( void)
                     digit_now = 0;                              // Set position as the first digit
                     initlily();	
                     LilyState = _Human_Move;
-                    KeyStatus=0;
+                    KeyStatus = 0;
                 }
                 break;
 
@@ -643,7 +646,7 @@ int main( void)
                 Display[1] = pgm_read_byte(&digits[((c[1]-1) & 0x07)]);     // second is a number
                 Display[2] = pgm_read_byte(&digits[((c[2]-1) & 0x07)+8]);   // third is a letter
                 Display[3] = pgm_read_byte(&digits[((c[3]-1) & 0x07)]);     // fourth is a number
-                Display[3] |= _DP;
+                Display[3] ^= ~_DP;
                 digit_now = 0;         	                                    // set position as the
                                                                             // first digit
 
@@ -671,7 +674,7 @@ int main( void)
                     LilyState = _New_Game;                                  // If that's the case
                                                                             // start a new game
                     RL = pgm_read_word(&difficult_level[(i&0x07)]);         // set difficulty level
-                    KeyStatus=0;
+                    KeyStatus = 0;
                     break;
                 }
                 break;
