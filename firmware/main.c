@@ -54,8 +54,8 @@ FILE usart0_str = FDEV_SETUP_STREAM(USART0SendByte, USART0ReceiveByte, _FDEV_SET
 /* Functions */
 void Initialize_Hardware()
 {
-    DDRB=0x0f;                                  // bits 4..0 as outputs
-    PORTB=0x0f;                                 // All segments off
+    DDRB = 0x0f;                                // bits 4..0 as outputs
+    PORTB = 0x0f;                               // All segments off
 
     DDRD = 0xc0;                                // bits 7..6 as outuputs
     PORTD = 0xfC;                               // All segments off, pullups on
@@ -101,11 +101,11 @@ void Clear_Display()
     Display[2]= _SPC;
     Display[3]= _SPC;
 
-    c[0]=32;          // Clear move vector (fill with spaces)
-    c[1]=32;
-    c[2]=32;
-    c[3]=32;
-    c[4]=10;
+    c[0] = 32;        // Clear move vector (fill with spaces)
+    c[1] = 32;
+    c[2] = 32;
+    c[3] = 32;
+    c[4] = 10;
 }
 
 void Refresh_display()
@@ -128,12 +128,12 @@ void Refresh_display()
 
         /* change pins to read keyboard */
 
-        PORTB = 0x0f;                                  // All segments off                   00001111
-        PORTD |= 0xfc;                                 // Pins B, G in high, pullups on pins 111111xx
-        PORTC |= 0x3f;                                 // pins D, F, Dp, A, E, D in high     xx111111
+        PORTB = 0x0f;                                  // All segments off
+        PORTD |= 0xfc;                                 // Pins B, G in high, pullups on pins
+        PORTC |= 0x3f;                                 // pins D, F, Dp, A, E, D in high
 
         /* Process CLR/NEW KEY */
-        PORTD &= ~(1<<7);                              // Drop line and wait for settle down 0xxxxxxx
+        PORTD &= ~(1<<7);                              // Drop line and wait for settle down
         asm("nop");
         asm("nop");
         asm("nop");
@@ -164,7 +164,7 @@ void Refresh_display()
                 KeyStatus |= (1<<CLR_EVENT);
             }
         }
-        PORTD |= (1<<7);                                // Raise line pin again              1xxxxxxx
+        PORTD |= (1<<7);                                // Raise line pin again
 
         /* Process ENTER Key */
         PORTD &= ~(1<<6);                               // Drop line and wait for settle down
@@ -207,7 +207,7 @@ void Refresh_display()
         asm("nop");
         asm("nop");
         asm("nop");
-        Keys18=(Keys18<<1) | MOVE;                      // save state of move button for this line
+        Keys18 = (Keys18<<1) | MOVE;                      // save state of move button for this line
         PORTC |= (1<<4);                                // Raise line pin again
 
         PORTC &= ~(1<<3);                               // Drop line and wait for settle down
@@ -307,23 +307,23 @@ void Refresh_display()
         }
 
         /* Update Display	*/
-        PORTB=0xff;
+        PORTB = 0xff;
         PORTC = ~Display[digit_now] & 0x3f;
         PORTD |= 0xc0;
         PORTD &= (~Display[digit_now] | 0x3f);
         switch (digit_now)                              // Enable current display anode
         {
             case 0:
-                PORTB=0xfe;
+                PORTB = 0xfe;
                 break;
             case 1:
-                PORTB=0xfd;
+                PORTB = 0xfd;
                 break;
             case 2:
-                PORTB=0xfb;
+                PORTB = 0xfb;
                 break;
             case 3:
-                PORTB=0xf7;
+                PORTB = 0xf7;
                 break;
         }
     }
@@ -334,8 +334,9 @@ uint8_t printBoard()
 {
     printf_P(PSTR("\nChessMate\n\n"));
 
-    int NN=-1;
-    while(++NN<121) {
+    int NN = -1;
+    while (++NN < 121)
+    {
         printf("%c", NN&8&&(NN+=7)?10:".?+nkbrq?*?NKBRQ" [b[NN]&15]); // print board
     }
 
